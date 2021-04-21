@@ -32,6 +32,8 @@ Now that we are in we decided to look around and we didn't really find anything 
 
 ![gitlab_ver](Images/git.labo_versio.PNG)
 
+### Time to start attacking the target
+
 As it turns out the Gitlab is running version 12.8.1 and we can now look out if there are any exploits to be used on this version of gitlab. We set out to look for a exploit and instantly we found and exploit for remote code execution. After a while we also found another type of exploit that allows arbitrary file read using issues in Gitlab projects. The exploit was from [HackerOne](https://hackerone.com/reports/827052). Using the example from HackerOne we wanted to try if we could first retrieve a file from the target system. We wanted to get file from /etc called "passwd". This file includes users from the system. We followed the example and created 2 projects and using the arbitrary file read exploit we moved issue from project 1 to project 2 and we gained the file we wanted.
 
 ![exploit1](Images/git.labo_haavoittuvuus2_toimii.PNG)
@@ -45,4 +47,12 @@ From the file, one thing that we noticed was that there is a user called "git", 
 ![afr](Images/secrets.PNG)
 ![secrets](Images/git.labo_haavoittuvuus2_toimii2.PNG)
 
-Now that we have the targets secret_key_base we need to find out a way to use it. 
+Now that we have the targets secret_key_base we need to find out a way to use it. This was indeed not hard as the same conversation that reported about the secrets file lets us know that we can replace our own local Gitlab instance's secret_key_base into the one we got from the target and by this we can try to use the remote code execution exploit. Well we started this by downloading the packet for installing the same version of Gitlab as the target has. After that we installed the Gitlab on our computer.
+
+![gitlab_local](Images/local_git.PNG)
+
+After we installed the Gitlab we configured it and reloaded it once so it created all the files that it needs to work. After this we just changed our local secret key for the one from the target. Now we ran the console and now is the time to create PoC for the RCE.
+
+![gitlab_console](Images/local_git_PoC.PNG)
+
+Now that we have the connection to our local Gitlab that has the secret key from the target we can use the RCE and try to get in to the target. 
