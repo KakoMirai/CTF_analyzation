@@ -55,4 +55,23 @@ After we installed the Gitlab we configured it and reloaded it once so it create
 
 ![gitlab_console](Images/local_git_PoC.PNG)
 
-Now that we have the connection to our local Gitlab that has the secret key from the target we can use the RCE and try to get in to the target. 
+Now that we have the connection to our local Gitlab that has the secret key from the target we can use the RCE and try to get in to the target. First of all we wanna do a proof of concept so that we know everyhting works. Following still the same article from HackerOne that had the information about the secret key and how to use it, they tell us the method how we can execute code remotely. Basically we create a cookie that includes the command we want to be executed in the target. After we have created the cookie we send it to the target and with this it should be done. After we followed the PoC that was included in the report we went to see if our command was executed and so we used the same arbitary file read method as before and as you can see, our code to create a file into the targets /tmp was successful.
+
+![rce_success](Images/poc_works.PNG)
+
+Now that the PoC works it's time to start thinking how we could get in to the system. Easiest way would be to create a file that would create a shell and so that file could be executed in the target machine. We tried few different setups here and eventually after creating a file called "reverse.sh" that has the code for the shell and after we modified the PoC command into trying to get the target to download the file and then to executue it, we just could not get it to work as we wanted.
+
+After taking a breather it dawned to us that because the exploit is a remote code execution, there probably is a ready payload in metasploit and as it turns out there is one. After setting up the metasploit payload with correct settings as seen below, we ran it and got our reverse shell into something. 
+
+![msf_settings](Images/meta_asetukset.PNG)
+![payload_success](Images/payload_success.PNG)
+
+Now that we are in we can confirm that git is indeed used to manage Gitlab. Now we need to figure out if this is the main system or some other type of environment. We use a method of checking if we are inside a container. We cat insides of /proc/1/cgroup and it seems that we indeed are inside a container. From here on we have no experience of getting out of the container and by a short look, it seems that it wont even be possible. We wanted to go back to Gitlab and to see if we could exploit the user of Dexter. We looked for a way to change password of user in Gitlab rails console and found out that it is very easy. We first started production console and then we checked if Dexter is an user and it seems that his user id is 1. Then we selected the user with id 1 and changed the password and confirmed it and saved it.
+
+![password_change](Images/reverse_passuvaihto.PNG)
+
+Now we tried to log into user (dexter@laboratory.htb) with new password and it was success!
+
+![decter_git](Images/dexterille_kirjautuminen.PNG)
+
+Now we can start looking into his projects. 
