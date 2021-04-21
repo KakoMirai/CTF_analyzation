@@ -74,4 +74,29 @@ Now we tried to log into user (dexter@laboratory.htb) with new password and it w
 
 ![decter_git](Images/dexterille_kirjautuminen.PNG)
 
-Now we can start looking into his projects. 
+Now we can start looking into his projects. After a while we found really interesting file, the id_rsa for his SSH login. This in itself is a huge risk for cybersecurity since the whole Gitlab environment is open to outside networks and that the id_rsa key of user is just behind 1 password. 
+
+![id_avain](Images/Secter_rsa_avain.PNG)
+
+With this we just copied the key into a file called "id_rsa" and used it to log into dexter in the laboratory.htb. First we received error with the login since the file i created didn't have correct permissions, but after that was fixed we got in and found the user flag. 
+
+![ssh_error](Images/rsa_permission%20denied.PNG)
+![ssh_success](Images/dexter_sisällä.PNG)
+![user_flag](Images/user_flag.PNG)
+
+Now that we have user in the main system we have to find either a way to escalate our privileges. After finding few differen ways, one that striked me as possible here would be to use escalation using PATH variable. We followed instructions from [hackingarticles.in](https://www.hackingarticles.in/linux-privilege-escalation-using-path-variable/) and after we understood how this exploit would work we looked for file with 4000 permissions. We found out that there is such a file called "docker-security" in /usr/local/bin/.
+
+![4000_file](Images/sus_dockersecurity.PNG) 
+
+With this i wanted to see what did the binary hold in and it has come chmod commands that are configured wrong. 
+
+![binary](Images/cat_sus_dockersecurity.PNG)
+
+After this we simply followed the guide on privilege escalation using PATH variable and we just ran the commands following the method 2 escalation. With this we modified the docker_security into actually forcing us to root account. Since the file docker_security has SUID permissions it can do that and now we have root access and access to the root flag.
+
+![PATH](Images/root_laboratory.PNG)
+![root_flag](Images/root_flag_labo.PNG)
+
+That's all for the machine, it was a wild ride and it took us easily over 15 hours because of the few rabbit holes and some methods we couldn't get working.
+
+
