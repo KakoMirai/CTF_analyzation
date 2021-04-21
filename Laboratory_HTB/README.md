@@ -6,21 +6,21 @@ As of 17th of April 2021, the machine in question called "Laboratory" from HTB h
 
 We are doing this project for course "Cybersecurity management" in our university of Haaga-Helia UAS. For this course we wanted to have a project where we could use our prior knowledge of pentesting, and so we decided to analyze and breach into a target that is both legal and ethical. We used Hack The Box, since it was familiar to us. 
 
-Laboratory has a main flaw in it that is old version of Gitlab that allows remote code execution. Gitlab is a git program that is used by many corporations and so it is closely related to any corporations cybersecurity. In this case the target is an fictional penetration testing / hacking company ran by a alias called Dexter. They claim that they cannot be hacked and that everything they produce is 100% safe. Well we took it personally and decided to test, if their claim was true.
+Laboratory has a main flaw in it that is old version of Gitlab that allows remote code execution. Gitlab is a git program that is used by many corporations and so it is closely related to any corporations cybersecurity. In this case the target is an fictional penetration testing / hacking company ran by an alias called Dexter. They claim that they cannot be hacked and that everything they produce is 100% safe. Well we took it personally and decided to test, if their claim was true.
 
 ### First reconnaissance with nmap and gobuster
 
-First we decided to start looking into our target and because i knew how most of the HTB machines work, i prematurely added "laboratory.htb" into our /etc/hosts file. 
+First we decided to start looking into our target and because we knew how most of the HTB machines work, we prematurely added "laboratory.htb" into our /etc/hosts file. 
 
 ![Hosts](Images/hosts.PNG)
 
-After this i decided to run a basic nmap on our target to figure out what ports were open and what could we do next. By this point we of course didn't know anything about the target since we were just starting so this would help us a lot.
+After this we decided to run a basic nmap on our target to figure out what ports were open and what we could do next. By this point we of course didn't know anything about the target since we were just starting, so the scan would help us a lot.
 
 ![nmap](Images/Laboratory_scan.PNG)
 
-From this scan we can see that there is another alternative name called "git.laboratory.htb", so we also added this to our /etc/hosts file. We could see that the system is Linux, but we expected this anyways since HTB site tells the OS of the machine. Otherwise this scan was a dud since it really didn't tell us anything important. There are ports 22(SSH), 80(apache/laboratory.htb) and 443(apache/git.laboratory.htb). 
+From this scan we can see that there is another alternative name called "git.laboratory.htb", so we also added this to our /etc/hosts file. We could see that the system is Linux, but we expected this anyways since HTB site tells the OS of the machine. Otherwise this scan was a dud since it really didn't tell us anything important. There are open ports 22(SSH), 80(apache/laboratory.htb) and 443(apache/git.laboratory.htb). 
 
-Since we now know that there is a hidden site "git.laboratory.htb" we can assume that this would be a good time to see what secrets the site hides. What we found from there is a Gitlab site for the company that Dexter runs. To proceed forward we need to create and account to the Gitlab, so we proceed and try to create account with fake information and also fake email with made up domain. After we try to register the form denies our registeration since our email domain is not accepted.
+Since we now know that there is a hidden site "git.laboratory.htb" we can assume that this would be a good time to see what secrets the site has hidden. What we found from there is a Gitlab site for the company that Dexter runs. To proceed forward we need to create and account to the Gitlab, so we proceed and try to create account with fake information and also fake email with made up domain. After we try to register the form denies our registeration since our email domain is not accepted.
 
 ![domain_issue](Images/git.labo_email_domain.PNG)
 
@@ -42,12 +42,12 @@ Then of course we wanted to take a peep of what we gained.
 
 ![passwd](Images/laboratory_passwd.PNG)
 
-From the file, one thing that we noticed was that there is a user called "git", and so we assumed that this indeed is the account that is used to maintain their Gitlab. But with mere arbitrary file read we cannot do more since actual file with password hashes is protected, so we decided to keep reading HackerOne's report and we found out a way to get the secret key for the Gitlab from targets /opt/gitlab/embedded/service/gitlab-rails/config/ folder. Using the same idea we now snatched the secrets.yml file from the target.
+From the file, one thing that we noticed was that there is a user called "git", and so we assumed that this indeed is the account that is used to maintain their Gitlab. But with mere arbitrary file read we cannot do more since actual file with password hashes is protected, so we decided to keep reading HackerOne's report and we found out a way to get the secret key for the Gitlab from target's /opt/gitlab/embedded/service/gitlab-rails/config/ folder. Using the same idea we now snatched the secrets.yml file from the target.
 
 ![afr](Images/secrets.PNG)
 ![secrets](Images/git.labo_haavoittuvuus2_toimii2.PNG)
 
-Now that we have the targets secret_key_base we need to find out a way to use it. This was indeed not hard as the same conversation that reported about the secrets file lets us know that we can replace our own local Gitlab instance's secret_key_base into the one we got from the target and by this we can try to use the remote code execution exploit. Well we started this by downloading the packet for installing the same version of Gitlab as the target has. After that we installed the Gitlab on our computer.
+Now that we have the targets secret_key_base we need to find out a way to use it. This was indeed not hard as the same conversation that reported about the secrets file lets us know that we can replace our own local Gitlab instance's secret_key_base into the one we got from the target and by this we can try to use the remote code execution exploit. We started this by downloading the packet for installing the same version of Gitlab as the target has. After that we installed the Gitlab on our computer.
 
 ![gitlab_local](Images/local_git.PNG)
 
@@ -78,21 +78,21 @@ Now we can start looking into his projects. After a while we found really intere
 
 ![id_avain](Images/Secter_rsa_avain.PNG)
 
-With this we just copied the key into a file called "id_rsa" and used it to log into dexter in the laboratory.htb. First we received error with the login since the file i created didn't have correct permissions, but after that was fixed we got in and found the user flag. 
+With this we just copied the key into a file called "id_rsa" and used it to log into dexter in the laboratory.htb. First we received error with the login since the file we created didn't have correct permissions, but after that was fixed we got in and found the user flag. 
 
 ![ssh_error](Images/rsa_permission%20denied.PNG)
 ![ssh_success](Images/dexter_sisällä.PNG)
 ![user_flag](Images/user_flag.PNG)
 
-Now that we have user in the main system we have to find either a way to escalate our privileges. After finding few differen ways, one that striked me as possible here would be to use escalation using PATH variable. We followed instructions from [hackingarticles.in](https://www.hackingarticles.in/linux-privilege-escalation-using-path-variable/) and after we understood how this exploit would work we looked for file with 4000 permissions. We found out that there is such a file called "docker-security" in /usr/local/bin/.
+Now that we have user in the main system we have to find either a way to escalate our privileges. After finding few different ways, one that striked us as possible here would be to escalate privileges using PATH variable. We followed instructions from [hackingarticles.in](https://www.hackingarticles.in/linux-privilege-escalation-using-path-variable/) and after we understood how this exploit would work we looked for file with 4000 permissions. We found out that there is such a file called "docker-security" in /usr/local/bin/.
 
 ![4000_file](Images/sus_dockersecurity.PNG) 
 
-With this i wanted to see what did the binary hold in and it has come chmod commands that are configured wrong. 
+With this we wanted to see what did the binary hold in and it has come chmod commands that are configured wrong. 
 
 ![binary](Images/cat_sus_dockersecurity.PNG)
 
-After this we simply followed the guide on privilege escalation using PATH variable and we just ran the commands following the method 2 escalation. With this we modified the docker_security into actually forcing us to root account. Since the file docker_security has SUID permissions it can do that and now we have root access and access to the root flag.
+After this we simply followed the guide on privilege escalation using PATH variable and we just ran the commands following the method 2 escalation. With this we modified the "docker_security" into actually forcing us to root account. Since the file "docker_security" has SUID permissions it can do that and now we have root access and access to the root flag.
 
 ![PATH](Images/root_laboratory.PNG)
 ![root_flag](Images/root_flag_labo.PNG)
@@ -100,3 +100,6 @@ After this we simply followed the guide on privilege escalation using PATH varia
 That's all for the machine, it was a wild ride and it took us easily over 15 hours because of the few rabbit holes and some methods we couldn't get working.
 
 
+## Conclusion regarding the project
+
+After we solved the machine we were even more sure that this machine was a perfect case for our project. The flaws that were used here are all common flaws that any business could have. The fact that there is an old version of program like Gitlab is a huge risk for a company. There will be more analyzation regarding the exploit in another report and there will probably be another writeup of more challenging machine if we have time for that. 
