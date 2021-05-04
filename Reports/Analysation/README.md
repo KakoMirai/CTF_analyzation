@@ -11,6 +11,7 @@ The vulnerability was pinpointed to the UploadsRewriter.
 It had a exploit that allowed the attacker to use Gitlab to read arbitrary files on the host machine.
 The `UploadsRewriter` didn't validate the file name, which allowed the copying of file via directory traversal when moving issues to another GitLab project.
 The same exploit also allows remote code execution by using the cookies_serializer. First attacker need to get the `secret_key_base` from `/opt/gitlab/embedded/services/gitlab-rails/config/secret.yml`. With the secret_key_base attacker can make a Marshalled payload to the `experimentation_subject_id` cookie. 
+Attacker can also create a local version of the GitLab environment if they have the `secret_key_base`. With this they have access to all the data that is available in the environment.
 ## Prevention 
 The most effecient way to prevent this is to update the GitLab version to a newer version than 12.8.1. 
 
